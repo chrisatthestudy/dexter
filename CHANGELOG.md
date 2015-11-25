@@ -1,6 +1,11 @@
 # Change Log
 All notable changes to this project will be documented in this file.
 
+## [0.0.2] - 2015-11-25
+### Changed
+- Add directory recursion
+- Remove redundant mmap import
+
 ## [0.0.1] - 2015-11-24
 ### Changed
 - Initial commit - rough (but functioning) draft of the program

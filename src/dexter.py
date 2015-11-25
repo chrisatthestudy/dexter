@@ -4,9 +4,9 @@
 Text-file indexer
 
 Usage:
-  dexter index [<path>]
-  dexter find <word> [in <path>]
-  dexter list [in <path>]
+  dexter [-vri] index [<path>]
+  dexter [-vri] find <word> [in <path>]
+  dexter [-vri] list [in <path>]
   dexter -h | --help
   dexter --version
 
@@ -16,7 +16,7 @@ Options:
   dexter list [for <path>] Lists all the words found
   -h --help     Show this screen.
   --version     Show version.
-  -q --quiet    Suppress messages
+  -v --verbose  Show messages
   -r --recurse  Recurse into sub-directories
   -i --reindex  For 'find' and 'list' forces a reindex even if an index exists
 """
@@ -24,8 +24,8 @@ Options:
 # Standard library imports
 import os
 import glob
-import mmap
 import collections
+import re
 
 # Third party imports
 from docopt import docopt
@@ -53,7 +53,7 @@ class Dexter():
         self.dictionary = {}
         
         # Retrieve the command-line options
-        self.quiet = self.params["--quiet"]
+        self.verbose = self.params["--verbose"]
         self.recurse = self.params["--recurse"]
         self.path = self.params["<path>"]
         self.word = self.params["<word>"]
@@ -78,10 +78,22 @@ class Dexter():
         the contents of the text-files found in the path.
         """
         self.report("Building index for %s" % self.path)
-        files = self.get_files()
-        for filespec in files:
-            words = self.scan_file(filespec)
+        files = self.get_files(self.path)
+        self.index_files(files)
 
+    def index_files(self, file_list):
+        """
+        Scans the text-files found in the supplied list, recursively
+        scanning any sub-folders found, provided the recurse option
+        has been set.
+        """
+        for filespec in file_list:
+            if os.path.isdir(filespec):
+                self.report("Building index for %s" % filespec)
+                self.index_files(self.get_files(filespec))
+            else:
+                self.scan_file(filespec)
+            
     def find_word(self):
         """
         Searches for the specified word in the directory. Creates a new
@@ -96,7 +108,7 @@ class Dexter():
             # Retrieve the tuple of all the locations where this word was
             # found, if any. This will raise a KeyError if the word was
             # not found.
-            locations = self.dictionary[self.word]
+            locations = self.dictionary[self.word.lower()]
             
             # List all the line numbers from each location
             current_location = ""
@@ -153,7 +165,9 @@ class Dexter():
         and returning a list of them.
         """
         words = []
-        
+
+        self.report("Scanning %s" % filespec)
+
         with open(filespec, 'r+') as f:
             line_number = 1
             for line in f:
@@ -222,20 +236,20 @@ class Dexter():
     
     def report(self, message):
         """
-        Prints the supplied message, unless the --quiet option has been
-        specified.
+        Prints the supplied message, provided that  the --verbose option has
+        been specified.
         """
-        if not self.quiet:
+        if self.verbose:
             print message
 
-    def get_files(self):
+    def get_files(self, path):
         """
         Returns a list of the textfiles in the specified path.
         """
-        base_list = glob.glob(os.path.join(self.path, "*.*"))
-        files = [filespec for filespec in base_list if self.is_textfile(filespec)]
+        base_list = glob.glob(os.path.join(path, "*"))
+        files = [filespec for filespec in base_list if self.is_textfile(filespec) or (os.path.isdir(filespec) and self.recurse)]
         return files
-        
+
     def is_textfile(self, filespec):
         """
         Returns True if the supplied filespec appears to be a text file. If
@@ -245,10 +259,10 @@ class Dexter():
         TODO: implement a decent check
         """
         filename, ext = os.path.splitext(filespec)
-        return (ext in [".txt", ".py", ".cpp", ".c", ".h", ".hpp"])
+        return (ext in [".txt", ".py", ".cpp", ".c", ".h", ".hpp", ".pas", ".sql"])
     
 if (__name__ == "__main__"):
-    params = docopt(__doc__, version='Dexter, v0.0.1')
+    params = docopt(__doc__, version='Dexter, v0.0.2')
 
     # print params
     
