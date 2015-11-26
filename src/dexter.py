@@ -19,7 +19,7 @@ Options:
   -v --verbose  Show messages
   -r --recurse  Recurse into sub-directories
   -i --reindex  For 'find' and 'list' forces a reindex even if an index exists
-  -a --abbrev   Show abbreviate list (word, line, and filename only, no path)
+  -a --abbrev   Show abbreviated list (word, line, and filename only, no path)
 """
 
 # Standard library imports
@@ -36,7 +36,7 @@ from docopt import docopt
 class Dexter():
 
     """
-    Main processor class, with API.execute() as the entry-point.
+    Main processor class, with Dexter.execute() as the entry-point.
     """
 
     # ----------------------------------------------------------------------
@@ -131,9 +131,12 @@ class Dexter():
         index file if one does not already exist, or if the --reindex
         parameter is specified.
         """
+        self.report("Searching for %s" % self.word)
+
         if self.reindex or not self.index_exists():
             self.make_index()
-        self.report("Searching for %s" % self.word)
+        else:
+            self.read_index()
         
         try:
             # Retrieve the tuple of all the locations where this word was
@@ -165,12 +168,13 @@ class Dexter():
         index file if one does not already exist, or if the --reindex
         parameter is specified.
         """
+        self.report("Listing all words in %s" % self.path)
+
         if self.reindex or not self.index_exists():
             self.make_index()
         else:
             self.read_index()
             
-        self.report("Listing all words in %s" % self.path)
         # Temporary version: just list the contents of the dictionary
         sorted_words = collections.OrderedDict(sorted(self.dictionary.items()))
         count = 0
@@ -318,7 +322,7 @@ class Dexter():
         return (ext in [".txt", ".py", ".cpp", ".c", ".h", ".hpp", ".pas", ".sql"])
     
 if (__name__ == "__main__"):
-    params = docopt(__doc__, version='Dexter, v0.0.3')
+    params = docopt(__doc__, version='Dexter, v0.0.4')
 
     # print params
     

@@ -1,7 +1,11 @@
 # Change Log
 All notable changes to this project will be documented in this file.
 
-## [0.0.3] -
+## [0.0.4] - 2015-11-26
+- Add read_index to 'find' option
+- Fix minor typos
+
+## [0.0.3] - 2015-11-26
 ### Changed
 - Read and write dictionary to file
 - Add basic default list of ignored words

@@ -25,9 +25,7 @@ of the file names and line numbers where a specified word can be found.
       -v --verbose  Show messages
       -r --recurse  Recurse into sub-directories
       -i --reindex  For 'find' and 'list' forces a reindex even if an index exists
-      -a --abbrev   Show abbreviate list (word, line, and filename only, no path)
-
-Note that not all of the options have been fully implemented in this version.
+      -a --abbrev   Show abbreviated list (word, line, and filename only, no path)
 
 ## Dependencies
 
