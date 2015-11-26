@@ -4,21 +4,22 @@
 Text-file indexer
 
 Usage:
-  dexter [-vri] index [<path>]
+  dexter [-vr] index [<path>]
   dexter [-vri] find <word> [in <path>]
-  dexter [-vri] list [in <path>]
+  dexter [-vria] list [in <path>] [max <count>]
   dexter -h | --help
   dexter --version
 
 Options:
   index [<path>]  Creates an index file for the specified path
   find <word> [in <path>] Searches for the specified word
-  dexter list [for <path>] Lists all the words found
-  -h --help     Show this screen.
-  --version     Show version.
+  dexter list [in <path>] [max <count>] Lists all the words found
+  -h --help     Show this screen
+  --version     Show version
   -v --verbose  Show messages
   -r --recurse  Recurse into sub-directories
   -i --reindex  For 'find' and 'list' forces a reindex even if an index exists
+  -a --abbrev   Show abbreviate list (word, line, and filename only, no path)
 """
 
 # Standard library imports
@@ -51,13 +52,42 @@ class Dexter():
         self.params = params
 
         self.dictionary = {}
+
+        self.ignore_words = [
+            "an",
+            "any",
+            "and",
+            "are",
+            "as",
+            "be",
+            "but",
+            "do",
+            "for",
+            "have",
+            "is",
+            "it",
+            "its",
+            "it's",
+            "not",
+            "or",
+            "the",
+            "that",
+            "this",
+            "to"
+            ]
         
         # Retrieve the command-line options
         self.verbose = self.params["--verbose"]
         self.recurse = self.params["--recurse"]
+        self.abbreviate = self.params["--abbrev"]
         self.path = self.params["<path>"]
         self.word = self.params["<word>"]
         self.reindex = self.params["--reindex"]
+        self.count = self.params["<count>"]
+        if not self.count:
+            self.count = -1
+        else:
+            self.count = int(self.count)
 
         # Ensure we have valid options
         if self.verify_path():
@@ -80,6 +110,7 @@ class Dexter():
         self.report("Building index for %s" % self.path)
         files = self.get_files(self.path)
         self.index_files(files)
+        self.save_index()
 
     def index_files(self, file_list):
         """
@@ -136,24 +167,26 @@ class Dexter():
         """
         if self.reindex or not self.index_exists():
             self.make_index()
+        else:
+            self.read_index()
+            
         self.report("Listing all words in %s" % self.path)
         # Temporary version: just list the contents of the dictionary
         sorted_words = collections.OrderedDict(sorted(self.dictionary.items()))
-        for word, locations in sorted_words.iteritems():
-            current_location = ""
-            lines = ""
-            print word
-            for location in locations:
-                if current_location is not location[0]:
-                    if lines is not "":
-                        print "", "", lines
-                        lines = ""
-                    current_location = location[0]
-                    print "", current_location
-                lines += "%d " % location[1]
-            if lines is not "":
-                print "", "", lines
+        count = 0
+        if self.count == -1:
+            self.count = len(sorted_words)
 
+        for word, locations in sorted_words.iteritems():
+            count += 1
+            if count <= self.count:
+                for location in locations:
+                    if self.abbreviate:
+                        print "{:20}|{:06d}|{}".format(word, location[1], os.path.basename(location[0]))
+                    else:
+                        print "{:20}|{:06d}|{}".format(word, location[1], location[0])
+            else:
+                break        
 
     # ----------------------------------------------------------------------
     # Main processing functions
@@ -168,12 +201,13 @@ class Dexter():
 
         self.report("Scanning %s" % filespec)
 
-        with open(filespec, 'r+') as f:
+        with open(filespec, 'r') as f:
             line_number = 1
             for line in f:
                 words = self.scan_line(line)
                 for word in words:
-                    self.add_to_dictionary(word, filespec, line_number)
+                    if not word in self.ignore_words and len(word) > 1:
+                        self.add_to_dictionary(word, filespec, line_number)
                 line_number += 1
 
     def scan_line(self, line):
@@ -203,7 +237,29 @@ class Dexter():
             self.dictionary[word] = [(filespec, line_number)]
         else:
             self.dictionary[word].append((filespec, line_number))
-            
+
+    def read_index(self):
+        """
+        Reads the dexter.index file and imports the contents. Assumes that the
+        file has already been confirmed to exist.
+        """
+        self.dictionary = {}
+        with open(os.path.join(self.path, "dexter.index"), "r") as f:
+            for line in f:
+                line = line.strip()
+                (word, line_number, filespec) = line.split("|")
+                self.add_to_dictionary(word, filespec, int(line_number))
+                
+    def save_index(self):
+        """
+        Saves the dexter.index file into the path given on the command-line,
+        or to the current working directory by default.
+        """
+        sorted_words = collections.OrderedDict(sorted(self.dictionary.items()))
+        with open(os.path.join(self.path, "dexter.index"), "w") as f:
+            for word, locations in sorted_words.iteritems():
+                for location in locations:
+                    f.write("{:20}|{:06d}|{}\n".format(word, location[1], location[0]))
     
     # ----------------------------------------------------------------------
     # Support functions
@@ -231,8 +287,8 @@ class Dexter():
         Returns True if an index file (dexter.index) exists in the
         specified path.
         """
-        filename = os.path.join(self.path, "dexter.index")
-        return os.path.exists(filename)
+        filespec = os.path.join(self.path, "dexter.index")
+        return os.path.exists(filespec)
     
     def report(self, message):
         """
@@ -262,7 +318,7 @@ class Dexter():
         return (ext in [".txt", ".py", ".cpp", ".c", ".h", ".hpp", ".pas", ".sql"])
     
 if (__name__ == "__main__"):
-    params = docopt(__doc__, version='Dexter, v0.0.2')
+    params = docopt(__doc__, version='Dexter, v0.0.3')
 
     # print params
     

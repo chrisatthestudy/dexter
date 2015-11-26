@@ -1,6 +1,12 @@
 # Change Log
 All notable changes to this project will be documented in this file.
 
+## [0.0.3] -
+### Changed
+- Read and write dictionary to file
+- Add basic default list of ignored words
+- Update README
+
 ## [0.0.2] - 2015-11-25
 ### Changed
 - Add directory recursion
