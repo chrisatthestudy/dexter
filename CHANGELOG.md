@@ -1,6 +1,10 @@
 # Change Log
 All notable changes to this project will be documented in this file.
 
+## [0.0.5] - 2015-11-27
+- Write 'ignore' file to settings directory (~/.dexter)
+- Fix exclusion of short words
+
 ## [0.0.4] - 2015-11-26
 - Add read_index to 'find' option
 - Fix minor typos

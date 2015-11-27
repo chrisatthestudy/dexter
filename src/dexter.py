@@ -54,26 +54,26 @@ class Dexter():
         self.dictionary = {}
 
         self.ignore_words = [
-            "an",
+            "all",
             "any",
             "and",
             "are",
-            "as",
-            "be",
             "but",
-            "do",
             "for",
+            "from",
             "have",
-            "is",
-            "it",
             "its",
             "it's",
             "not",
-            "or",
             "the",
+            "their",
+            "there",
+            "they",
             "that",
             "this",
-            "to"
+            "too",
+            "was",
+            "were"
             ]
         
         # Retrieve the command-line options
@@ -88,6 +88,9 @@ class Dexter():
             self.count = -1
         else:
             self.count = int(self.count)
+
+        self.read_ignore_file()
+        print self.ignore_words
 
         # Ensure we have valid options
         if self.verify_path():
@@ -210,7 +213,7 @@ class Dexter():
             for line in f:
                 words = self.scan_line(line)
                 for word in words:
-                    if not word in self.ignore_words and len(word) > 1:
+                    if len(word) > 2 and not word in self.ignore_words:
                         self.add_to_dictionary(word, filespec, line_number)
                 line_number += 1
 
@@ -242,6 +245,28 @@ class Dexter():
         else:
             self.dictionary[word].append((filespec, line_number))
 
+    def read_ignore_file(self):
+        """
+        Reads the list of 'ignore' words from file.
+        """
+        filespec = os.path.join(os.path.expanduser("~"), ".dexter", "dexter.ignore")
+        if os.path.exists(filespec):
+            with open(os.path.join(os.path.expanduser("~"), ".dexter", "dexter.ignore"), "r") as f:
+                self.ignore_words = f.read().splitlines()
+        else:
+            self.write_ignore_file()
+
+    def write_ignore_file(self):
+        """
+        Writes the current list of 'ignore' files as the default list
+        """
+        filespec = os.path.join(os.path.expanduser("~"), ".dexter")
+        if not os.path.exists(filespec):
+            os.makedirs(filespec)
+        with open(os.path.join(filespec, "dexter.ignore"), "w") as f:
+            for word in self.ignore_words:
+                f.write("%s\n" % word)
+            
     def read_index(self):
         """
         Reads the dexter.index file and imports the contents. Assumes that the
@@ -322,7 +347,7 @@ class Dexter():
         return (ext in [".txt", ".py", ".cpp", ".c", ".h", ".hpp", ".pas", ".sql"])
     
 if (__name__ == "__main__"):
-    params = docopt(__doc__, version='Dexter, v0.0.4')
+    params = docopt(__doc__, version='Dexter, v0.0.5')
 
     # print params
     
