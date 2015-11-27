@@ -1,6 +1,11 @@
 # Change Log
 All notable changes to this project will be documented in this file.
 
+## [0.0.6] - 2015-11-27
+- Amend abbreviated list format
+- Replace 'is not' with '!=' for string comparisons
+- Fix loading of index: trim spaces from words
+
 ## [0.0.5] - 2015-11-27
 - Write 'ignore' file to settings directory (~/.dexter)
 - Fix exclusion of short words

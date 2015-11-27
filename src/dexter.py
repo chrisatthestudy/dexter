@@ -90,7 +90,6 @@ class Dexter():
             self.count = int(self.count)
 
         self.read_ignore_file()
-        print self.ignore_words
 
         # Ensure we have valid options
         if self.verify_path():
@@ -145,6 +144,7 @@ class Dexter():
             # Retrieve the tuple of all the locations where this word was
             # found, if any. This will raise a KeyError if the word was
             # not found.
+            print "Searching for %s" % self.word.lower()
             locations = self.dictionary[self.word.lower()]
             
             # List all the line numbers from each location
@@ -152,14 +152,14 @@ class Dexter():
             lines = ""
             print "Found at:"
             for location in locations:
-                if current_location is not location[0]:
-                    if lines is not "":
+                if current_location != location[0]:
+                    if lines != "":
                         print "", "", lines
                         lines = ""
                     current_location = location[0]
                     print "", current_location
                 lines += "%d " % location[1]
-            if lines is not "":
+            if lines != "":
                 print "", "", lines
             
         except KeyError:
@@ -187,14 +187,36 @@ class Dexter():
         for word, locations in sorted_words.iteritems():
             count += 1
             if count <= self.count:
-                for location in locations:
-                    if self.abbreviate:
-                        print "{:20}|{:06d}|{}".format(word, location[1], os.path.basename(location[0]))
-                    else:
+                if self.abbreviate:
+                    print "%s, %s" % (word.strip(), self.book_index_entry(locations))
+                else:
+                    for location in locations:
                         print "{:20}|{:06d}|{}".format(word, location[1], location[0])
             else:
                 break        
 
+    def book_index_entry(self, locations):
+        """
+        Scans the supplied list of filenames and numbers and builds a book-style
+        index out of them.
+        """
+        current_filename = ""
+        entries = {}
+        numbers = []
+        for location in locations:
+            filename = os.path.basename(location[0])
+            number = location[1]
+            if filename != current_filename:
+                current_filename = filename
+                entries[current_filename] = []
+            entries[current_filename].append(number)
+            # print current_filename, number
+        result = []
+        for filename, numbers in entries.iteritems():
+            result.append("%s, %s" % (filename, ", ".join(map(str, numbers))))
+        return "; ".join(result)
+        
+    
     # ----------------------------------------------------------------------
     # Main processing functions
     # ----------------------------------------------------------------------
@@ -229,8 +251,8 @@ class Dexter():
             if char in alpha:
                 word += char
             else:
-                if word.strip() is not "":
-                    words.append(word.lower())
+                if word.strip() != "":
+                    words.append(word.strip().lower())
                 word = ""
 
         return words
@@ -277,7 +299,7 @@ class Dexter():
             for line in f:
                 line = line.strip()
                 (word, line_number, filespec) = line.split("|")
-                self.add_to_dictionary(word, filespec, int(line_number))
+                self.add_to_dictionary(word.strip(), filespec, int(line_number))
                 
     def save_index(self):
         """
@@ -347,7 +369,7 @@ class Dexter():
         return (ext in [".txt", ".py", ".cpp", ".c", ".h", ".hpp", ".pas", ".sql"])
     
 if (__name__ == "__main__"):
-    params = docopt(__doc__, version='Dexter, v0.0.5')
+    params = docopt(__doc__, version='Dexter, v0.0.6')
 
     # print params
     
