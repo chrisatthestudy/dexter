@@ -13,7 +13,7 @@ Usage:
 Options:
   index [<path>]  Creates an index file for the specified path
   find <word> [in <path>] Searches for the specified word
-  dexter list [in <path>] [max <count>] Lists all the words found
+  list [in <path>] [max <count>] Lists all the words found
   -h --help     Show this screen
   --version     Show version
   -v --verbose  Show messages
@@ -188,7 +188,7 @@ class Dexter():
             count += 1
             if count <= self.count:
                 if self.abbreviate:
-                    print "%s, %s" % (word.strip(), self.book_index_entry(locations))
+                    print "%s %s" % (word.strip(), self.book_index_entry(locations))
                 else:
                     for location in locations:
                         print "{:20}|{:06d}|{}".format(word, location[1], location[0])
@@ -203,17 +203,26 @@ class Dexter():
         current_filename = ""
         entries = {}
         numbers = []
+        # locations is the list of filenames and line numbers for a specific word
         for location in locations:
+            # Extract the filename and number
             filename = os.path.basename(location[0])
             number = location[1]
+            
+            # If this is a new filename, begin a new list of numbers, against
+            # this filename
             if filename != current_filename:
                 current_filename = filename
                 entries[current_filename] = []
+                
+            # Add the number to the list of numbers against the filename
             entries[current_filename].append(number)
-            # print current_filename, number
+
+        # Build the final list so that each entry consists of the filename
+        # followed by the list of line numbers in that file
         result = []
         for filename, numbers in entries.iteritems():
-            result.append("%s, %s" % (filename, ", ".join(map(str, numbers))))
+            result.append("\n\t%s, %s" % (filename, ", ".join(map(str, numbers))))
         return "; ".join(result)
         
     
@@ -369,7 +378,7 @@ class Dexter():
         return (ext in [".txt", ".py", ".cpp", ".c", ".h", ".hpp", ".pas", ".sql"])
     
 if (__name__ == "__main__"):
-    params = docopt(__doc__, version='Dexter, v0.0.6')
+    params = docopt(__doc__, version='Dexter, v0.0.7')
 
     # print params
     

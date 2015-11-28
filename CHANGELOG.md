@@ -1,6 +1,10 @@
 # Change Log
 All notable changes to this project will be documented in this file.
 
+## [0.0.7] - 2015-11-28
+- Improve the abbreviated list
+- Add more comments to the list formatting routines
+
 ## [0.0.6] - 2015-11-27
 - Amend abbreviated list format
 - Replace 'is not' with '!=' for string comparisons
