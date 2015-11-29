@@ -1,6 +1,10 @@
 # Change Log
 All notable changes to this project will be documented in this file.
 
+## [0.0.8] - 2015-11-29
+- Add option for user-specified 'ignore words' file
+- Extend default set of ignored words
+
 ## [0.0.7] - 2015-11-28
 - Improve the abbreviated list
 - Add more comments to the list formatting routines
