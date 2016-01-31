@@ -184,7 +184,7 @@ class Dexter():
         has been set.
         """
         for filespec in file_list:
-            if os.path.isdir(filespec):
+            if os.path.isdir(filespec) and self.recurse:
                 self.report("Building index for %s" % filespec)
                 self.index_files(self.get_files(filespec))
             else:
@@ -310,7 +310,7 @@ class Dexter():
                     if len(word) > 2:
                         if word not in self.ignore_words:
                             self.add_to_dictionary(word, filespec, line_number)
-                        else:
+                        elif self.verbose:
                             print "Ignoring %s" % word
                 line_number += 1
 
@@ -445,10 +445,10 @@ class Dexter():
         TODO: implement a decent check
         """
         filename, ext = os.path.splitext(filespec)
-        return (ext in [".txt", ".py", ".cpp", ".c", ".h", ".hpp", ".pas", ".sql"])
+        return (ext in [".txt", ".md", ".py", ".cpp", ".c", ".h", ".hpp", ".pas", ".sql"])
     
 if (__name__ == "__main__"):
-    params = docopt(__doc__, version='Dexter, v0.0.8')
+    params = docopt(__doc__, version='Dexter, v0.0.9')
 
     #print params
     
